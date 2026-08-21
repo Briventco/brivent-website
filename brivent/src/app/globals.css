@@ -1,0 +1,50 @@
+@import "tailwindcss";
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --muted: #64748b;
+  --muted-light: #94a3b8;
+  --accent: #152bf9; /* Persian Blue */
+  --accent-dark: #0f1fc4;
+  --flamingo: #ff110b; /* Brivent red accent, used sparingly */
+  --border: #e2e8f0;
+  --surface: #f8f9fb;
+  --dark-bg: #03032d; /* Deep Gulf Blue */
+  --dark-border: rgba(255, 255, 255, 0.06);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-light: var(--muted-light);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+  --color-flamingo: var(--flamingo);
+  --color-border: var(--border);
+  --color-surface: var(--surface);
+  --color-dark-bg: var(--dark-bg);
+  --font-sans: var(--font-manrope, "Manrope"), -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.4);
+  border-radius: 9999px;
+}
+
+::selection {
+  background: var(--accent);
+  color: #ffffff;
+}
