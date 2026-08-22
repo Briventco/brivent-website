@@ -16,4 +16,14 @@ export const projects: Project[] = [
       "Servra is live and in use, giving restaurants a faster way to handle WhatsApp orders without requiring customers to download a new app.",
     image: "/images/products/servra/img.png",
   },
+  {
+    slug: "jo-tech-gadgets-hub",
+    title: "JO TECH Gadgets Hub",
+    category: "Web Development / E-Commerce",
+    description:
+      "A modern e-commerce platform concept built from scratch for a technology and gadgets business, including product catalogue, e-commerce functionality, and an administrative backend.",
+    technology: [],
+    image: "/images/products/jo-tech/img.png",
+    liveUrl: "https://jo-tech-f4mz.vercel.app/",
+  },
 ];

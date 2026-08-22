@@ -3,9 +3,14 @@ import Image from "next/image";
 import { Project } from "@/types/project";
 
 export default function ProjectCard({ project }: { project: Project }) {
+  const isExternal = Boolean(project.liveUrl);
+  const href = project.liveUrl ?? `/work/${project.slug}`;
+  const description = project.description ?? project.challenge ?? "";
+
   return (
     <Link
-      href={`/work/${project.slug}`}
+      href={href}
+      {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       className="group block bg-white border border-border rounded-xl overflow-hidden hover:border-accent hover:shadow-xl hover:shadow-accent/10 transition-all duration-300 hover:-translate-y-1"
     >
       <div className="relative aspect-[4/3] bg-gradient-to-br from-accent/10 to-surface overflow-hidden">
@@ -33,8 +38,11 @@ export default function ProjectCard({ project }: { project: Project }) {
           {project.title}
         </h3>
         <p className="text-sm text-muted leading-relaxed line-clamp-2">
-          {project.challenge}
+          {description}
         </p>
+        <span className="inline-block mt-3 text-xs text-accent font-medium tracking-widest uppercase group-hover:underline">
+          View Project →
+        </span>
       </div>
     </Link>
   );

@@ -11,13 +11,17 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+// Projects with a `liveUrl` link out to their live site instead of a case
+// study, so they don't get an internal /work/[slug] detail page.
+const caseStudyProjects = projects.filter((project) => !project.liveUrl);
+
 export async function generateStaticParams() {
-  return projects.map((project) => ({ slug: project.slug }));
+  return caseStudyProjects.map((project) => ({ slug: project.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const project = projects.find((p) => p.slug === slug);
+  const project = caseStudyProjects.find((p) => p.slug === slug);
 
   if (!project) {
     return buildMetadata({
@@ -29,25 +33,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return buildMetadata({
     title: project.title,
-    description: project.challenge,
+    description: project.description ?? project.challenge ?? "",
     path: `/work/${project.slug}`,
   });
 }
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { slug } = await params;
-  const project = projects.find((p) => p.slug === slug);
+  const project = caseStudyProjects.find((p) => p.slug === slug);
 
   if (!project) {
     notFound();
   }
 
-  const sections: { label: string; content: string }[] = [
-    { label: "Challenge", content: project.challenge },
-    { label: "Approach", content: project.approach },
-    { label: "Solution", content: project.solution },
-    { label: "Outcome", content: project.outcome },
-  ];
+  const sections = (
+    [
+      { label: "Challenge", content: project.challenge },
+      { label: "Approach", content: project.approach },
+      { label: "Solution", content: project.solution },
+      { label: "Outcome", content: project.outcome },
+    ] as { label: string; content: string | undefined }[]
+  ).filter(
+    (section): section is { label: string; content: string } =>
+      !!section.content
+  );
 
   if (project.lessons) {
     sections.push({ label: "What we learned", content: project.lessons });

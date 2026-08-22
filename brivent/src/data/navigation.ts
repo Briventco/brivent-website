@@ -12,7 +12,6 @@ export const mainNav: NavLink[] = [
   { href: "/team", label: "Team" },
   { href: "/blog", label: "Insights" },
   { href: "/careers", label: "Careers" },
-  { href: "/contact", label: "Contact" },
 ];
 
 export const primaryNavCta: NavLink = {

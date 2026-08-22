@@ -18,7 +18,7 @@ export default function ProjectGrid() {
         />
 
         {projects.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {projects.map((project, i) => (
               <motion.div
                 key={project.slug}
