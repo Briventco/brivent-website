@@ -38,7 +38,7 @@ export default function Navbar() {
             priority
           />
           <span className="text-2xl font-bold tracking-tight text-foreground">
-            brivent<span className="text-flamingo">.</span>
+            {/* brivent<span className="text-flamingo">.</span> */}
           </span>
         </Link>
 

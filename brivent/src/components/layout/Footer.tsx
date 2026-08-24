@@ -19,7 +19,7 @@ export default function Footer() {
   className="w-16 h-16 object-contain"
 />
             <span className="text-xl font-bold text-white">
-              brivent<span className="text-flamingo">.</span>
+              {/* brivent<span className="text-flamingo">.</span> */}
             </span>
           </Link>
           <p className="text-white/40 text-sm leading-relaxed max-w-xs">
