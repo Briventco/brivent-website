@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { buildMetadata } from "@/lib/metadata";
+import { getBlogPosts } from "@/lib/api";
 import { BlogHero, Categories, LatestPosts } from "@/components/blog/Sections";
 
 export const metadata: Metadata = buildMetadata({
@@ -9,12 +10,14 @@ export const metadata: Metadata = buildMetadata({
   path: "/blog",
 });
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const posts = await getBlogPosts();
+
   return (
     <main>
       <BlogHero />
       <Categories />
-      <LatestPosts />
+      <LatestPosts posts={posts} />
     </main>
   );
 }

@@ -36,7 +36,7 @@ export const team: TeamMember[] = [
     name: "Israel yaya",
     role: "Frontend Developer",
     department: "Engineering",
-    photo: "/images/team/Israel.png",
+    photo: "/images/team/image.png",
     bio:"Frontend Developer focused on building modern, responsive, and user-friendly web applications. Experienced in creating clean and interactive interfaces with a strong focus on performance, usability, and responsive design. Passionate about turning ideas and designs into seamless digital experiences",
     // bio: "Full-Stack Developer with strong expertise in backend development, building scalable, secure, and reliable server-side applications. Experienced in API development, database management, authentication, and system architecture, while also capable of delivering modern and responsive frontend solutions. Passionate about writing clean, efficient code and building robust systems that solve real-world problems.",
     linkedin: "",

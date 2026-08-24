@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { submitContact } from "@/lib/api";
 
-interface ContactPayload {
-  name?: string;
-  email?: string;
-  organization?: string;
-  enquiryType?: string;
-  website?: string;
-  message?: string;
-}
-
-function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Name is required."),
+  email: z.string().trim().email("Please provide a valid email address."),
+  organization: z.string().trim().optional(),
+  enquiryType: z.string().trim().min(1, "Enquiry type is required."),
+  message: z.string().trim().min(10, "Message must be at least 10 characters."),
+  website: z.string().optional(),
+});
 
 export async function POST(req: NextRequest) {
-  let body: ContactPayload;
+  let body: unknown;
 
   try {
     body = await req.json();
@@ -22,31 +20,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { name, email, message, enquiryType } = body;
+  const parsed = contactSchema.safeParse(body);
 
-  if (!name || !email || !message || !enquiryType) {
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Name, email, enquiry type, and message are required." },
+      { error: parsed.error.issues[0]?.message ?? "Invalid request." },
       { status: 400 }
     );
   }
 
-  if (!isValidEmail(email)) {
-    return NextResponse.json(
-      { error: "Please provide a valid email address." },
-      { status: 400 }
-    );
+  // Honeypot: real users never fill this hidden field in.
+  if (parsed.data.website) {
+    return NextResponse.json({ success: true }, { status: 200 });
   }
 
-  console.log("Brivent contact enquiry received:", {
-    name,
-    email,
-    organization: body.organization,
-    enquiryType,
-    website: body.website,
-    message,
-    receivedAt: new Date().toISOString(),
-  });
+  const result = await submitContact(parsed.data);
+
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

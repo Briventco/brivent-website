@@ -5,7 +5,8 @@ import Container from "@/components/shared/Container";
 import SectionHeading from "@/components/shared/SectionHeading";
 import SectionLabel from "@/components/shared/SectionLabel";
 import BlogCard from "@/components/shared/BlogCard";
-import { blogPosts, blogCategories } from "@/data/blog";
+import { blogCategories } from "@/data/blog";
+import { BlogPost } from "@/types/blog";
 
 export function BlogHero() {
   return (
@@ -50,7 +51,7 @@ export function Categories() {
   );
 }
 
-export function LatestPosts() {
+export function LatestPosts({ posts: blogPosts }: { posts: BlogPost[] }) {
   return (
     <section className="bg-surface py-24">
       <Container>

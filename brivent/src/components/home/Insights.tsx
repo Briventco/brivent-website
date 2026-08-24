@@ -5,10 +5,10 @@ import Link from "next/link";
 import Container from "@/components/shared/Container";
 import SectionHeading from "@/components/shared/SectionHeading";
 import BlogCard from "@/components/shared/BlogCard";
-import { blogPosts } from "@/data/blog";
+import { BlogPost } from "@/types/blog";
 
-export default function Insights() {
-  const recent = blogPosts.slice(0, 3);
+export default function Insights({ posts }: { posts: BlogPost[] }) {
+  const recent = posts.slice(0, 3);
 
   if (recent.length === 0) return null;
 

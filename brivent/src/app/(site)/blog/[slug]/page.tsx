@@ -1,8 +1,9 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { marked } from "marked";
 import { buildMetadata } from "@/lib/metadata";
-import { blogPosts } from "@/data/blog";
+import { getBlogPosts } from "@/lib/api";
 import { formatDate, getRelatedPosts } from "@/lib/utils";
 import Container from "@/components/shared/Container";
 import BlogCard from "@/components/shared/BlogCard";
@@ -12,12 +13,14 @@ interface Props {
 }
 
 export async function generateStaticParams() {
-  return blogPosts.map((post) => ({ slug: post.slug }));
+  const posts = await getBlogPosts();
+  return posts.map((post) => ({ slug: post.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = blogPosts.find((p) => p.slug === slug);
+  const posts = await getBlogPosts();
+  const post = posts.find((p) => p.slug === slug);
 
   if (!post) {
     return buildMetadata({
@@ -37,13 +40,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogArticlePage({ params }: Props) {
   const { slug } = await params;
-  const post = blogPosts.find((p) => p.slug === slug);
+  const posts = await getBlogPosts();
+  const post = posts.find((p) => p.slug === slug);
 
   if (!post) {
     notFound();
   }
 
-  const related = getRelatedPosts(blogPosts, post.slug);
+  const related = getRelatedPosts(posts, post.slug);
+  const contentHtml = marked.parse(post.content, { async: false });
 
   return (
     <main>
@@ -77,9 +82,10 @@ export default async function BlogArticlePage({ params }: Props) {
 
       <section className="bg-white py-20 border-b border-border">
         <Container>
-          <article className="prose prose-slate max-w-3xl text-base text-muted leading-relaxed whitespace-pre-wrap">
-            {post.content}
-          </article>
+          <article
+            className="prose prose-slate max-w-3xl text-base text-muted leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: contentHtml }}
+          />
         </Container>
       </section>
 

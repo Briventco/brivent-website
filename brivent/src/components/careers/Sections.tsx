@@ -8,7 +8,7 @@ import Button from "@/components/shared/Button";
 import JobCard from "@/components/shared/JobCard";
 import GridFrame from "@/components/shared/GridFrame";
 import GridCard from "@/components/shared/GridCard";
-import { jobOpenings } from "@/data/careers";
+import { JobOpening } from "@/types/career";
 
 export function CareersHero() {
   return (
@@ -138,7 +138,7 @@ export function WhatWeLookFor() {
   );
 }
 
-export function OpenRoles() {
+export function OpenRoles({ jobs: jobOpenings }: { jobs: JobOpening[] }) {
   return (
     <section className="bg-surface py-24 border-b border-border">
       <Container>

@@ -7,8 +7,11 @@ import SelectedWork from "@/components/home/SelectedWork";
 import TeamPreview from "@/components/home/TeamPreview";
 import Insights from "@/components/home/Insights";
 import FinalCta from "@/components/home/FinalCta";
+import { getBlogPosts } from "@/lib/api";
 
-export default function Home() {
+export default async function Home() {
+  const posts = await getBlogPosts();
+
   return (
     <main>
       <Hero />
@@ -18,7 +21,7 @@ export default function Home() {
       <HowWeWork />
       <SelectedWork />
       <TeamPreview />
-      <Insights />
+      <Insights posts={posts} />
       <FinalCta />
     </main>
   );

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { buildMetadata } from "@/lib/metadata";
+import { getJobOpenings } from "@/lib/api";
 import {
   CareersHero,
   WhyBrivent,
@@ -16,14 +17,16 @@ export const metadata: Metadata = buildMetadata({
   path: "/careers",
 });
 
-export default function CareersPage() {
+export default async function CareersPage() {
+  const jobs = await getJobOpenings();
+
   return (
     <main>
       <CareersHero />
       <WhyBrivent />
       <EarlyCareer />
       <WhatWeLookFor />
-      <OpenRoles />
+      <OpenRoles jobs={jobs} />
       <CareersCta />
     </main>
   );
