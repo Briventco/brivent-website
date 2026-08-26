@@ -98,7 +98,24 @@ async function getCollectionItemBySlug(key, slug) {
   return findBySlug(config.fallback, normalizedSlug);
 }
 
+async function upsertCollectionItem(key, slug, data) {
+  const config = collectionMap[key];
+  const normalizedSlug = String(slug || "").trim();
+  if (!normalizedSlug) throw new Error("A slug is required.");
+  await db.collection(config.name).doc(normalizedSlug).set({ ...data, slug: normalizedSlug }, { merge: true });
+  return getCollectionItemBySlug(key, normalizedSlug);
+}
+
+async function deleteCollectionItem(key, slug) {
+  const config = collectionMap[key];
+  const normalizedSlug = String(slug || "").trim();
+  if (!normalizedSlug) throw new Error("A slug is required.");
+  await db.collection(config.name).doc(normalizedSlug).delete();
+}
+
 module.exports = {
   listCollection,
   getCollectionItemBySlug,
+  upsertCollectionItem,
+  deleteCollectionItem,
 };

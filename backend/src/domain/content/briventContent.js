@@ -14,9 +14,6 @@ const team = [
   { slug: "member-4", name: "Israel yaya", role: "Frontend Developer", department: "Engineering", photo: "/images/team/Israel.png", bio: "Frontend Developer focused on building modern, responsive, and user-friendly web applications. Experienced in creating clean and interactive interfaces with a strong focus on performance, usability, and responsive design. Passionate about turning ideas and designs into seamless digital experiences", linkedin: "", isEarlyBuilder: false },
   { slug: "member-5", name: "Oyindamola Abisoye", role: "Mobile dev", department: "Engineering", photo: "/images/team/kayleb.png", bio: "Mobile development expertise in React Native.", linkedin: "", isEarlyBuilder: false },
   { slug: "member-6", name: "Oyindamola Abisoye", role: "Operations", department: "Operations", photo: "/images/team/kayleb.png", bio: "Mobile development expertise in React Native.", linkedin: "", isEarlyBuilder: false },
-  { slug: "member-5", name: "Full Name", role: "Role / Title", department: "People", photo: "/images/team/member-5.jpg", bio: "Short one or two sentence bio.", linkedin: "", isEarlyBuilder: false },
-  { slug: "member-6", name: "Full Name", role: "Role / Title", department: "Finance", photo: "/images/team/member-6.jpg", bio: "Short one or two sentence bio.", linkedin: "", isEarlyBuilder: false },
-  { slug: "member-7", name: "Full Name", role: "Role / Title", department: "Content", photo: "/images/team/member-7.jpg", bio: "Short one or two sentence bio.", linkedin: "", isEarlyBuilder: false },
 ];
 const findBySlug = (items, slug) => items.find((item) => item.slug === slug) || null;
 module.exports = { careers, blogPosts, products, work, team, findBySlug };

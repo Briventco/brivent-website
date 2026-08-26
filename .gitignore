@@ -1,0 +1,23 @@
+# Dependencies and build output
+**/node_modules/
+**/.next/
+**/dist/
+**/out/
+**/build/
+**/.cache/
+
+# Local environment files and secrets
+**/.env
+**/.env.local
+**/.env.*.local
+backend/*firebase-adminsdk*.json
+*.pem
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
+
+# TypeScript and tooling
+**/*.tsbuildinfo
+.vercel/

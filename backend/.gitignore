@@ -1,4 +1,4 @@
 .env
-.env.example
+!.env.example
 node_modules
 brivent-website-firebase-adminsdk-fbsvc-9247f5f190.json
