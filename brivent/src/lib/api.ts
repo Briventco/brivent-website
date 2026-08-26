@@ -2,9 +2,15 @@ import "server-only";
 import { z } from "zod";
 import { BlogPost, BlogCategory } from "@/types/blog";
 import { JobOpening, EngagementType } from "@/types/career";
+import { Product, ProductStatus } from "@/types/product";
+import { Project } from "@/types/project";
+import { TeamDepartment, TeamMember } from "@/types/team";
+import { products as localProducts } from "@/data/products";
+import { projects as localProjects } from "@/data/projects";
+import { team as localTeam } from "@/data/team";
 
 const API_BASE_URL =
-  process.env.BRIVENT_API_URL ?? "https://restaurant-bot-6yoq.onrender.com";
+  process.env.BRIVENT_API_URL ?? "http://localhost:3002";
 
 const FETCH_TIMEOUT_MS = 10_000;
 const REVALIDATE_SECONDS = 300;
@@ -80,6 +86,53 @@ function parseList<T>(
   });
 }
 
+const productSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  tagline: z.string().default(""),
+  category: z.string().default(""),
+  description: z.string().default(""),
+  status: z.string().default("Coming Soon"),
+  image: z.string().optional(),
+  href: z.string().default(""),
+});
+
+function toProduct(raw: z.infer<typeof productSchema>): Product {
+  return { ...raw, status: raw.status as ProductStatus };
+}
+
+const projectSchema = z.object({
+  slug: z.string(),
+  title: z.string(),
+  category: z.string().default(""),
+  description: z.string().optional(),
+  challenge: z.string().optional(),
+  approach: z.string().optional(),
+  solution: z.string().optional(),
+  technology: z.array(z.string()).default([]),
+  outcome: z.string().optional(),
+  lessons: z.string().optional(),
+  image: z.string().optional(),
+  confidential: z.boolean().optional(),
+  liveUrl: z.string().optional(),
+});
+
+const teamMemberSchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  role: z.string().default(""),
+  department: z.string().default("Engineering"),
+  photo: z.string().optional(),
+  bio: z.string().optional(),
+  linkedin: z.string().optional(),
+  twitter: z.string().optional(),
+  isEarlyBuilder: z.boolean().optional(),
+});
+
+function toTeamMember(raw: z.infer<typeof teamMemberSchema>): TeamMember {
+  return { ...raw, department: raw.department as TeamDepartment };
+}
+
 export async function getBlogPosts(): Promise<BlogPost[]> {
   const data = await apiFetch("/api/blog");
   return parseList(data, blogPostSchema, "blog post").map(toBlogPost);
@@ -88,6 +141,24 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 export async function getJobOpenings(): Promise<JobOpening[]> {
   const data = await apiFetch("/api/careers");
   return parseList(data, jobOpeningSchema, "job opening").map(toJobOpening);
+}
+
+export async function getProducts(): Promise<Product[]> {
+  const data = await apiFetch("/api/products");
+  const products = parseList(data, productSchema, "product").map(toProduct);
+  return products.length > 0 ? products : localProducts;
+}
+
+export async function getProjects(): Promise<Project[]> {
+  const data = await apiFetch("/api/work");
+  const projects = parseList(data, projectSchema, "project");
+  return projects.length > 0 ? projects : localProjects;
+}
+
+export async function getTeamMembers(): Promise<TeamMember[]> {
+  const data = await apiFetch("/api/team");
+  const members = parseList(data, teamMemberSchema, "team member").map(toTeamMember);
+  return members.length > 0 ? members : localTeam;
 }
 
 export interface ContactPayload {

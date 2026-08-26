@@ -5,9 +5,9 @@ import Link from "next/link";
 import Container from "@/components/shared/Container";
 import SectionHeading from "@/components/shared/SectionHeading";
 import ProjectCard from "@/components/shared/ProjectCard";
-import { projects } from "@/data/projects";
+import { Project } from "@/types/project";
 
-export default function SelectedWork() {
+export default function SelectedWork({ projects }: { projects: Project[] }) {
   const featured = projects.slice(0, 4);
 
   return (

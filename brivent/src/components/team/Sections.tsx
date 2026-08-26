@@ -7,8 +7,7 @@ import SectionLabel from "@/components/shared/SectionLabel";
 import Button from "@/components/shared/Button";
 import TeamCard from "@/components/shared/TeamCard";
 import ParticleField from "@/components/shared/ParticleField";
-import { team } from "@/data/team";
-import { TeamDepartment } from "@/types/team";
+import { TeamDepartment, TeamMember } from "@/types/team";
 
 export function TeamHero() {
   return (
@@ -25,8 +24,7 @@ export function TeamHero() {
         >
           <SectionLabel light>Team</SectionLabel>
           <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-tight max-w-3xl mb-6">
-            The people{" "}
-            <span className="text-accent">building Brivent.</span>
+            The people <span className="text-accent">building Brivent.</span>
           </h1>
           <p className="text-white/60 text-lg leading-relaxed max-w-2xl">
             Brivent is powered by people who are learning, building, solving
@@ -41,11 +39,13 @@ export function TeamHero() {
 function DepartmentGroup({
   department,
   description,
+  teamMembers,
 }: {
   department: TeamDepartment;
   description: string;
+  teamMembers: TeamMember[];
 }) {
-  const members = team.filter((m) => m.department === department);
+  const members = teamMembers.filter((m) => m.department === department);
 
   return (
     <section className="relative bg-white py-16 border-b border-border overflow-hidden">
@@ -86,35 +86,38 @@ function DepartmentGroup({
   );
 }
 
-export function Leadership() {
+export function Leadership({ teamMembers }: { teamMembers: TeamMember[] }) {
   return (
     <DepartmentGroup
       department="Leadership"
       description="Our leadership team is responsible for company direction, product vision, operations, partnerships, and the systems that allow Brivent to grow."
+      teamMembers={teamMembers}
     />
   );
 }
 
-export function Engineering() {
+export function Engineering({ teamMembers }: { teamMembers: TeamMember[] }) {
   return (
     <DepartmentGroup
       department="Engineering"
-      description="Our engineering team turns product ideas into working technology — from interfaces and APIs to infrastructure, AI systems, integrations, and production software."
+      description="Our engineering team turns product ideas into working technology - from interfaces and APIs to infrastructure, AI systems, integrations, and production software."
+      teamMembers={teamMembers}
     />
   );
 }
 
-export function Operations() {
+export function Operations({ teamMembers }: { teamMembers: TeamMember[] }) {
   return (
     <DepartmentGroup
       department="Operations"
       description="Operations keeps the company moving. The team coordinates communication, meetings, people processes, documentation, client follow-ups, and the day-to-day systems behind our work."
+      teamMembers={teamMembers}
     />
   );
 }
 
-export function EarlyBuilders() {
-  const earlyBuilders = team.filter((m) => m.isEarlyBuilder);
+export function EarlyBuilders({ teamMembers }: { teamMembers: TeamMember[] }) {
+  const earlyBuilders = teamMembers.filter((m) => m.isEarlyBuilder);
 
   return (
     <section className="relative bg-surface py-24 overflow-hidden">

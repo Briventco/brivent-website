@@ -5,7 +5,7 @@ import Link from "next/link";
 import Container from "@/components/shared/Container";
 import SectionHeading from "@/components/shared/SectionHeading";
 import ProductCard from "@/components/shared/ProductCard";
-import { products } from "@/data/products";
+import { Product } from "@/types/product";
 
 function ComingSoonCard() {
   return (
@@ -24,7 +24,7 @@ function ComingSoonCard() {
   );
 }
 
-export default function ProductsPreview() {
+export default function ProductsPreview({ products }: { products: Product[] }) {
   return (
     <section className="relative bg-surface py-24 border-b border-border overflow-hidden">
       <div className="absolute top-0 right-0 w-[30rem] h-[30rem] rounded-full bg-accent/[0.06] blur-3xl pointer-events-none" />

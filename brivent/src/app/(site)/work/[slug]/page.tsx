@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { buildMetadata } from "@/lib/metadata";
-import { projects } from "@/data/projects";
+import { getProjects } from "@/lib/api";
 import Container from "@/components/shared/Container";
 import SectionLabel from "@/components/shared/SectionLabel";
 import Button from "@/components/shared/Button";
@@ -11,17 +11,15 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// Projects with a `liveUrl` link out to their live site instead of a case
-// study, so they don't get an internal /work/[slug] detail page.
-const caseStudyProjects = projects.filter((project) => !project.liveUrl);
-
 export async function generateStaticParams() {
-  return caseStudyProjects.map((project) => ({ slug: project.slug }));
+  const projects = await getProjects();
+  return projects.filter((project) => !project.liveUrl).map((project) => ({ slug: project.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const project = caseStudyProjects.find((p) => p.slug === slug);
+  const projects = await getProjects();
+  const project = projects.filter((item) => !item.liveUrl).find((item) => item.slug === slug);
 
   if (!project) {
     return buildMetadata({
@@ -40,7 +38,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { slug } = await params;
-  const project = caseStudyProjects.find((p) => p.slug === slug);
+  const projects = await getProjects();
+  const project = projects.filter((item) => !item.liveUrl).find((item) => item.slug === slug);
 
   if (!project) {
     notFound();
@@ -54,8 +53,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       { label: "Outcome", content: project.outcome },
     ] as { label: string; content: string | undefined }[]
   ).filter(
-    (section): section is { label: string; content: string } =>
-      !!section.content
+    (section): section is { label: string; content: string } => !!section.content
   );
 
   if (project.lessons) {
@@ -70,7 +68,7 @@ export default async function ProjectDetailPage({ params }: Props) {
             href="/work"
             className="text-white/40 hover:text-accent text-sm transition-colors"
           >
-            ← All work
+            &larr; All work
           </Link>
           <SectionLabel light className="mt-6">
             {project.category}

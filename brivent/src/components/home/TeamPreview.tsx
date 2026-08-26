@@ -5,10 +5,10 @@ import Container from "@/components/shared/Container";
 import SectionHeading from "@/components/shared/SectionHeading";
 import Button from "@/components/shared/Button";
 import TeamCard from "@/components/shared/TeamCard";
-import { team } from "@/data/team";
+import { TeamMember } from "@/types/team";
 
-export default function TeamPreview() {
-  const preview = team.slice(0, 4);
+export default function TeamPreview({ teamMembers }: { teamMembers: TeamMember[] }) {
+  const preview = teamMembers.slice(0, 4);
 
   return (
     <section className="relative bg-surface py-24 border-b border-border overflow-hidden">

@@ -4,9 +4,9 @@ import { motion } from "framer-motion";
 import Container from "@/components/shared/Container";
 import SectionHeading from "@/components/shared/SectionHeading";
 import ProjectCard from "@/components/shared/ProjectCard";
-import { projects } from "@/data/projects";
+import { Project } from "@/types/project";
 
-export default function ProjectGrid() {
+export default function ProjectGrid({ projects }: { projects: Project[] }) {
   return (
     <section className="bg-white py-24 border-b border-border">
       <Container>

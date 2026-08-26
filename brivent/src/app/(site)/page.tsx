@@ -7,20 +7,25 @@ import SelectedWork from "@/components/home/SelectedWork";
 import TeamPreview from "@/components/home/TeamPreview";
 import Insights from "@/components/home/Insights";
 import FinalCta from "@/components/home/FinalCta";
-import { getBlogPosts } from "@/lib/api";
+import { getBlogPosts, getProducts, getProjects, getTeamMembers } from "@/lib/api";
 
 export default async function Home() {
-  const posts = await getBlogPosts();
+  const [posts, products, projects, teamMembers] = await Promise.all([
+    getBlogPosts(),
+    getProducts(),
+    getProjects(),
+    getTeamMembers(),
+  ]);
 
   return (
     <main>
       <Hero />
       <WhatWeDo />
-      <FeaturedProduct />
-      <ProductsPreview />
+      <FeaturedProduct product={products[0]} />
+      <ProductsPreview products={products} />
       <HowWeWork />
-      <SelectedWork />
-      <TeamPreview />
+      <SelectedWork projects={projects} />
+      <TeamPreview teamMembers={teamMembers} />
       <Insights posts={posts} />
       <FinalCta />
     </main>

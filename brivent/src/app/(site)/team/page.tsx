@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { buildMetadata } from "@/lib/metadata";
+import { getTeamMembers } from "@/lib/api";
 import {
   TeamHero,
   Leadership,
@@ -15,14 +16,16 @@ export const metadata: Metadata = buildMetadata({
   path: "/team",
 });
 
-export default function TeamPage() {
+export default async function TeamPage() {
+  const teamMembers = await getTeamMembers();
+
   return (
     <main>
       <TeamHero />
-      <Leadership />
-      <Engineering />
-      <Operations />
-      <EarlyBuilders />
+      <Leadership teamMembers={teamMembers} />
+      <Engineering teamMembers={teamMembers} />
+      <Operations teamMembers={teamMembers} />
+      <EarlyBuilders teamMembers={teamMembers} />
     </main>
   );
 }

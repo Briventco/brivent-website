@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Container from "@/components/shared/Container";
 import Button from "@/components/shared/Button";
 import SectionLabel from "@/components/shared/SectionLabel";
+import { Product } from "@/types/product";
 
 function StripeGlow() {
   return (
@@ -33,7 +34,13 @@ function StripeGlow() {
   );
 }
 
-export default function FeaturedProduct() {
+export default function FeaturedProduct({ product }: { product?: Product }) {
+  const href = product?.href ?? "/products/servra";
+  const title = product?.name ?? "Servra";
+  const description =
+    product?.description ??
+    "Servra is an AI Order Agent for restaurants that works directly through a vendor's existing WhatsApp number. Customers message naturally, receive the menu, and place orders without downloading a new app.";
+
   return (
     <section className="bg-dark-bg py-24 relative overflow-hidden">
       <StripeGlow />
@@ -54,13 +61,10 @@ export default function FeaturedProduct() {
               <span className="text-flamingo">Done.</span>
             </h2>
             <p className="text-white/60 text-base md:text-lg leading-relaxed max-w-xl mb-8">
-              Servra is an AI Order Agent for restaurants that works
-              directly through a vendor&rsquo;s existing WhatsApp number.
-              Customers message naturally, receive the menu, and place
-              orders without downloading a new app.
+              {description}
             </p>
-            <Button href="/products/servra" variant="primary">
-              Explore Servra
+            <Button href={href} variant="primary">
+              Explore {title}
             </Button>
           </motion.div>
 

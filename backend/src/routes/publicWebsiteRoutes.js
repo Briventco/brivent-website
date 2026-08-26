@@ -1,10 +1,10 @@
 const { Router } = require("express");
-const { careers, blogPosts, products, work, team, findBySlug } = require("../domain/content/briventContent");
 const { isValidEmail } = require("../domain/utils/email");
 const { addContactInquiry } = require("../repositories/contactInquiryRepo");
+const { listCollection, getCollectionItemBySlug } = require("../repositories/briventContentRepo");
 
-function sendBySlug(res, items, slug) {
-  const item = findBySlug(items, slug);
+async function sendBySlug(res, collectionKey, slug) {
+  const item = await getCollectionItemBySlug(collectionKey, slug);
   return item ? res.status(200).json(item) : res.status(404).json({ error: "Resource not found" });
 }
 
@@ -23,15 +23,33 @@ function createPublicWebsiteRoutes() {
       return res.status(200).json({ success: true, id });
     } catch (error) { return next(error); }
   });
-  router.get("/careers", (_req, res) => res.status(200).json(careers));
-  router.get("/careers/:slug", (req, res) => sendBySlug(res, careers, req.params.slug));
-  router.get("/blog", (_req, res) => res.status(200).json(blogPosts));
-  router.get("/blog/:slug", (req, res) => sendBySlug(res, blogPosts, req.params.slug));
-  router.get("/team", (_req, res) => res.status(200).json(team));
-  router.get("/products", (_req, res) => res.status(200).json(products));
-  router.get("/products/:slug", (req, res) => sendBySlug(res, products, req.params.slug));
-  router.get("/work", (_req, res) => res.status(200).json(work));
-  router.get("/work/:slug", (req, res) => sendBySlug(res, work, req.params.slug));
+  router.get("/careers", async (_req, res, next) => {
+    try { return res.status(200).json(await listCollection("careers")); } catch (error) { return next(error); }
+  });
+  router.get("/careers/:slug", async (req, res, next) => {
+    try { return await sendBySlug(res, "careers", req.params.slug); } catch (error) { return next(error); }
+  });
+  router.get("/blog", async (_req, res, next) => {
+    try { return res.status(200).json(await listCollection("blogPosts")); } catch (error) { return next(error); }
+  });
+  router.get("/blog/:slug", async (req, res, next) => {
+    try { return await sendBySlug(res, "blogPosts", req.params.slug); } catch (error) { return next(error); }
+  });
+  router.get("/team", async (_req, res, next) => {
+    try { return res.status(200).json(await listCollection("team")); } catch (error) { return next(error); }
+  });
+  router.get("/products", async (_req, res, next) => {
+    try { return res.status(200).json(await listCollection("products")); } catch (error) { return next(error); }
+  });
+  router.get("/products/:slug", async (req, res, next) => {
+    try { return await sendBySlug(res, "products", req.params.slug); } catch (error) { return next(error); }
+  });
+  router.get("/work", async (_req, res, next) => {
+    try { return res.status(200).json(await listCollection("work")); } catch (error) { return next(error); }
+  });
+  router.get("/work/:slug", async (req, res, next) => {
+    try { return await sendBySlug(res, "work", req.params.slug); } catch (error) { return next(error); }
+  });
   return router;
 }
 
