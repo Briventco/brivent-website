@@ -15,7 +15,12 @@ function createApp() {
   app.use("/api", createPublicWebsiteRoutes());
   app.use("/api/admin", createAdminRoutes());
   app.use((req, res) => res.status(404).json({ error: "Route not found", path: req.originalUrl }));
-  app.use((error, _req, res, _next) => res.status(500).json({ error: "Internal server error" }));
+  app.use((error, _req, res, _next) => {
+    const status = Number(error.status || error.statusCode) || (error.code === "LIMIT_FILE_SIZE" ? 413 : 500);
+    const message = status < 500 ? error.message : "Internal server error";
+    if (status >= 500) console.error(error);
+    return res.status(status).json({ error: message || "Something went wrong." });
+  });
   return app;
 }
 

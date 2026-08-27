@@ -1,57 +1,132 @@
-# Render deployment
+# Brivent Website Hosting Handoff
 
-This repository contains three deployable services:
+This project has three parts and uses two hosting platforms:
 
-- `brivent-api`: Node/Express backend
-- `brivent-website`: Next.js public website
-- `brivent-admin`: Vite static admin dashboard
+| Application | Purpose | Hosting | Directory |
+| --- | --- | --- | --- |
+| Brivent Website | Public-facing website | Vercel | `brivent/` |
+| Brivent API | Website data, contact form, and admin API | Render | `backend/` |
+| Brivent Admin | Private content dashboard | Vercel | `admin/` |
 
-## Deploy with Blueprint
+The public website and admin dashboard are deployed as separate Vercel projects. The backend runs as a Node service on Render.
 
-1. Push the repository to GitHub. The Firebase service-account JSON and all `.env` files are ignored and must not be committed.
-2. In Render, choose **New + > Blueprint** and select this repository.
-3. Render will read `render.yaml` and create all three services.
-4. Complete the environment values marked `sync: false` in the Render dashboard.
+## Repository and secrets
 
-## Required backend values
+Push the repository to GitHub and give the hosting administrator access to it. The repository includes the source code and deployment configuration, but does not include local `.env` files or the Firebase service-account JSON.
 
-For `brivent-api`:
+Do not commit or send these files through GitHub:
+
+- `backend/.env`
+- `admin/.env`
+- `backend/brivent-website-firebase-adminsdk-*.json`
+- Any `node_modules` directory
+
+The Firebase service-account credentials must be added privately in Render. The Firebase web configuration can be added as Vercel environment variables.
+
+## 1. Deploy the backend on Render
+
+In Render, create a **Web Service** connected to this repository. Use these settings:
+
+- **Root directory:** `backend`
+- **Runtime:** Node
+- **Build command:** `npm install`
+- **Start command:** `npm start`
+- **Node version:** `20`
+
+The included `render.yaml` can also be used to create the backend service as a Blueprint.
+
+Add these environment variables to the Render service:
 
 ```env
 FIREBASE_PROJECT_ID=brivent-website
-FIREBASE_SERVICE_ACCOUNT_JSON={the complete service-account JSON on one line}
-ADMIN_EMAILS=the Firebase Authentication admin email
-CORS_ALLOWED_ORIGINS=https://brivent-website.onrender.com,https://brivent-admin.onrender.com
+FIREBASE_SERVICE_ACCOUNT_JSON=<complete Firebase service-account JSON>
+FIREBASE_STORAGE_BUCKET=brivent-website.firebasestorage.app
+ADMIN_EMAILS=<admin Firebase account email>
+CORS_ALLOWED_ORIGINS=https://<website-domain>,https://<admin-domain>
 ```
 
-Use the actual Render URLs after the services are created. Keep the service-account JSON only in Render's secret environment variable. Do not paste it into GitHub.
+`FIREBASE_STORAGE_BUCKET` is where the admin dashboard's image uploads are stored. It must match the bucket shown in the Firebase Console under Storage (and the same value used for `VITE_FIREBASE_STORAGE_BUCKET` below).
 
-## Required website values
-
-For `brivent-website`:
+Use the final Vercel domains in `CORS_ALLOWED_ORIGINS`. For example:
 
 ```env
-BRIVENT_API_URL=https://brivent-api.onrender.com
+CORS_ALLOWED_ORIGINS=https://brivent.vercel.app,https://brivent-admin.vercel.app
 ```
 
-For `brivent-admin`:
+The service-account JSON is private and must only be entered in Render's environment settings.
+
+After deployment, confirm the API is running by opening:
+
+```text
+https://<render-backend-domain>/health
+```
+
+## 2. Deploy the public website on Vercel
+
+Create a new Vercel project from the same GitHub repository with these settings:
+
+- **Root directory:** `brivent`
+- **Framework preset:** Next.js
+- **Install command:** `npm install`
+- **Build command:** `npm run build`
+- **Start command:** Vercel manages this automatically
+
+Add this environment variable in Vercel:
 
 ```env
-VITE_API_URL=https://brivent-api.onrender.com
-VITE_SITE_URL=https://brivent-website.onrender.com
-VITE_FIREBASE_API_KEY=AIza...
+BRIVENT_API_URL=https://<render-backend-domain>
 ```
 
-The remaining Firebase web values are already specified in `render.yaml`. `VITE_*` values are public browser configuration; the backend service-account JSON is private.
+After the first deployment, copy the website's Vercel domain into the backend's `CORS_ALLOWED_ORIGINS` value.
+
+## 3. Deploy the admin dashboard on Vercel
+
+Create another Vercel project from the same GitHub repository:
+
+- **Root directory:** `admin`
+- **Framework preset:** Other
+- **Build command:** `npm run build`
+- **Output directory:** `dist`
+- **Install command:** `npm install`
+
+Add these environment variables in Vercel:
+
+```env
+VITE_API_URL=https://<render-backend-domain>
+VITE_SITE_URL=https://<website-domain>
+VITE_FIREBASE_API_KEY=<Firebase web API key>
+VITE_FIREBASE_AUTH_DOMAIN=brivent-website.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=brivent-website
+VITE_FIREBASE_STORAGE_BUCKET=brivent-website.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=246431380167
+VITE_FIREBASE_APP_ID=1:246431380167:web:749211513d05e1774f44e2
+```
+
+The admin's Firebase web settings are safe to use in a browser. They are different from the private Firebase Admin service-account credentials used by Render.
+
+After the admin deployment is live, add its Vercel domain to the backend's `CORS_ALLOWED_ORIGINS` value and redeploy the backend.
 
 ## Firebase setup
 
-In Firebase Console:
+In the Firebase Console for `brivent-website`:
 
 1. Enable **Authentication > Sign-in method > Email/Password**.
-2. Create the admin user.
-3. Create Firestore Database if it does not exist.
-4. After the backend is deployed, run the team seed locally with the service account configured in `backend/.env`:
+2. Create the administrator account.
+3. Create Firestore Database if it does not already exist.
+4. Enable **Storage** if it does not already exist, and note its bucket name for `FIREBASE_STORAGE_BUCKET` above.
+5. Make sure the administrator email matches `ADMIN_EMAILS` in Render.
+
+The admin dashboard manages these Firestore collections:
+
+- `team`
+- `products`
+- `blogPosts`
+- `work`
+- `careers`
+
+## Initial team data
+
+After Firestore has been created, seed the existing team records once from a computer with the Firebase service account configured in `backend/.env`:
 
 ```bash
 cd backend
@@ -59,8 +134,12 @@ npm install
 npm run seed:team
 ```
 
-The admin dashboard can then manage the `team`, `products`, `blogPosts`, `work`, and `careers` collections.
+The command can be run again safely. It uses each member's `slug` as the Firestore document ID.
 
-## Manual Render setup
+## Final checks
 
-If you do not use the Blueprint, create the same three services manually using the root directories and commands in `render.yaml`. For the admin static site, use `dist` as the publish directory.
+1. Open the Vercel website and confirm it loads.
+2. Open the Render `/health` URL and confirm it returns successfully.
+3. Open the Vercel admin URL and sign in with the Firebase administrator account.
+4. Confirm that the Team collection appears in the dashboard.
+5. Submit a test contact form and confirm the enquiry appears in the admin dashboard.

@@ -20,6 +20,8 @@ The dashboard runs at `http://localhost:5173` by default.
 
 ## Content model
 
-The dashboard manages the Firestore collections `products`, `blogPosts`, `work`, `team`, and `careers`. Documents use their `slug` as the Firestore document ID. Use **Import** to upload one JSON document or an array of documents, and **Export** to download the current collection.
+The dashboard manages the Firestore collections `products`, `blogPosts`, `work`, `team`, and `careers`. Documents use their `slug` as the Firestore document ID — the slug is generated automatically from the item's name/title when it's first created and can't be changed afterwards. Use **Import** to upload one JSON document or an array of documents, and **Export** to download the current collection.
+
+Image fields support pasting a URL or uploading a file directly. Uploads go through the backend to Firebase Storage (set `FIREBASE_STORAGE_BUCKET` in the backend `.env`, see `backend/.env.example`) and are made public automatically. Click any image thumbnail to preview it full size.
 
 The backend admin API is protected by Firebase ID tokens and the `ADMIN_EMAILS` allowlist. Public website reads remain unchanged.

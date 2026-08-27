@@ -10,44 +10,11 @@ services:
         value: 20
       - key: FIREBASE_PROJECT_ID
         value: brivent-website
+      - key: FIREBASE_STORAGE_BUCKET
+        value: brivent-website.firebasestorage.app
       - key: ADMIN_EMAILS
         sync: false
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
-
-  - type: web
-    name: brivent-website
-    runtime: node
-    rootDir: brivent
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    envVars:
-      - key: NODE_VERSION
-        value: 20
-      - key: BRIVENT_API_URL
-        sync: false
-
-  - type: static
-    name: brivent-admin
-    rootDir: admin
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    envVars:
-      - key: VITE_API_URL
-        sync: false
-      - key: VITE_SITE_URL
-        sync: false
-      - key: VITE_FIREBASE_API_KEY
-        sync: false
-      - key: VITE_FIREBASE_AUTH_DOMAIN
-        value: brivent-website.firebaseapp.com
-      - key: VITE_FIREBASE_PROJECT_ID
-        value: brivent-website
-      - key: VITE_FIREBASE_STORAGE_BUCKET
-        value: brivent-website.firebasestorage.app
-      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
-        value: "246431380167"
-      - key: VITE_FIREBASE_APP_ID
-        value: 1:246431380167:web:749211513d05e1774f44e2

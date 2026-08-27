@@ -1,63 +1,172 @@
 import { useEffect, useState } from "react";
-import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
-import { Activity, ArrowUpRight, Check, ChevronRight, FileJson, Inbox, LayoutDashboard, LogOut, Menu, Plus, RefreshCw, Save, Search, Trash2, Upload, X } from "lucide-react";
-
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3002";
-const siteUrl = import.meta.env.VITE_SITE_URL || "http://localhost:3000";
-const collectionNames = ["products", "blogPosts", "work", "team", "careers"] as const;
-type Collection = typeof collectionNames[number];
-type RecordData = Record<string, unknown>;
-type Inquiry = RecordData & { id: string; status?: string; name?: string; email?: string; message?: string; enquiryType?: string; createdAt?: { _seconds?: number } | string };
-
-const firebaseApp = initializeApp({ apiKey: import.meta.env.VITE_FIREBASE_API_KEY, authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN, projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID, storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET, messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID, appId: import.meta.env.VITE_FIREBASE_APP_ID });
-const auth = getAuth(firebaseApp);
-
-async function request(path: string, token: string, options: RequestInit = {}) {
-  const response = await fetch(`${apiUrl}${path}`, { ...options, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...options.headers } });
-  if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Request failed");
-  return response.status === 204 ? null : response.json();
-}
-
-function Login() {
-  const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [error, setError] = useState(""); const [loading, setLoading] = useState(false);
-  async function submit(event: React.FormEvent) { event.preventDefault(); setLoading(true); setError(""); try { await signInWithEmailAndPassword(auth, email, password); } catch { setError("Sign in failed. Check your email and password."); } finally { setLoading(false); } }
-  return <main className="login-shell"><div className="login-panel"><div className="brand-mark">B<span>/</span></div><p className="eyebrow">Brivent / Admin</p><h1>Command centre</h1><p className="muted">Manage the content that powers the Brivent website.</p><form onSubmit={submit} className="login-form"><label>Email<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@brivent.com" required /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" required /></label>{error && <p className="error">{error}</p>}<button className="primary-button" disabled={loading}>{loading ? "Signing in..." : "Sign in"}<ArrowUpRight size={17} /></button></form></div><div className="login-aside"><span>01</span><p>Keep the public site moving.</p><small>Content, enquiries, and the small details in between.</small></div></main>;
-}
+import { onAuthStateChanged, User } from "firebase/auth";
+import { RefreshCw } from "lucide-react";
+import { auth } from "./lib/firebase";
+import { api } from "./lib/api";
+import { Collection, Inquiry, RecordData, Section } from "./types";
+import { titleFor } from "./schema";
+import { Login } from "./components/Login";
+import { Sidebar } from "./components/Sidebar";
+import { Topbar } from "./components/Topbar";
+import { Overview } from "./components/Overview";
+import { CollectionView } from "./components/CollectionView";
+import { InquiryList } from "./components/InquiryList";
+import { Toast, ToastState } from "./components/Toast";
+import { ConfirmDialog, ConfirmState } from "./components/ConfirmDialog";
 
 function App() {
-  const [user, setUser] = useState<User | null>(null); const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   useEffect(() => onAuthStateChanged(auth, (next) => { setUser(next); setLoading(false); }), []);
   if (loading) return <div className="loading-screen"><RefreshCw className="spin" /> Loading workspace</div>;
   return user ? <Dashboard user={user} /> : <Login />;
 }
 
 function Dashboard({ user }: { user: User }) {
-  const [section, setSection] = useState<Collection | "overview" | "inquiries">("overview"); const [items, setItems] = useState<RecordData[]>([]); const [inquiries, setInquiries] = useState<Inquiry[]>([]); const [counts, setCounts] = useState<Record<string, number>>({}); const [selected, setSelected] = useState<RecordData | null>(null); const [query, setQuery] = useState(""); const [notice, setNotice] = useState(""); const [mobileNav, setMobileNav] = useState(false);
-  const token = () => user.getIdToken();
-  async function refresh() { const authToken = await token(); const summary = await request("/api/admin/summary", authToken); setCounts(summary.counts); if (section === "inquiries") setInquiries(await request("/api/admin/inquiries", authToken)); else if (section !== "overview") setItems(await request(`/api/admin/content/${section}`, authToken)); }
+  const [section, setSection] = useState<Section>("overview");
+  const [items, setItems] = useState<RecordData[]>([]);
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [selected, setSelected] = useState<RecordData | null>(null);
+  const [query, setQuery] = useState("");
+  const [toast, setToast] = useState<ToastState>(null);
+  const [confirm, setConfirm] = useState<ConfirmState>(null);
+  const [mobileNav, setMobileNav] = useState(false);
+  const [loadingSection, setLoadingSection] = useState(false);
+
+  async function token() {
+    return user.getIdToken();
+  }
+
+  function notifyError(error: unknown) {
+    setToast({ message: error instanceof Error ? error.message : "Something went wrong.", tone: "error" });
+  }
+
+  async function refresh() {
+    setLoadingSection(true);
+    try {
+      const authToken = await token();
+      const summary = await api.summary(authToken);
+      setCounts(summary.counts);
+      if (section === "inquiries") setInquiries(await api.inquiries(authToken));
+      else if (section !== "overview") setItems(await api.list(authToken, section as Collection));
+    } catch (error) {
+      notifyError(error);
+    } finally {
+      setLoadingSection(false);
+    }
+  }
+
   useEffect(() => {
     setSelected(null);
     setQuery("");
-    refresh().catch((error) => setNotice(error.message));
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
-  async function save(data: RecordData) { const authToken = await token(); const slug = String(data.slug || "").trim(); if (!slug) throw new Error("Every item needs a slug."); await request(`/api/admin/content/${section}/${encodeURIComponent(slug)}`, authToken, { method: "PUT", body: JSON.stringify(data) }); setSelected(null); setNotice("Saved and published"); await refresh(); }
-  async function remove(item: RecordData) { if (!confirm(`Delete ${String(item.name || item.title || item.slug)}?`)) return; await request(`/api/admin/content/${section}/${encodeURIComponent(String(item.slug))}`, await token(), { method: "DELETE" }); setNotice("Item deleted"); await refresh(); }
-  async function updateInquiry(id: string, status: string) { await request(`/api/admin/inquiries/${id}`, await token(), { method: "PATCH", body: JSON.stringify({ status }) }); setNotice("Inquiry updated"); await refresh(); }
-  function exportItems() { const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `${section}.json`; link.click(); URL.revokeObjectURL(link.href); }
-  async function importItems(event: React.ChangeEvent<HTMLInputElement>) { const file = event.target.files?.[0]; if (!file || section === "overview" || section === "inquiries") return; const parsed = JSON.parse(await file.text()); const values = Array.isArray(parsed) ? parsed : [parsed]; for (const value of values) await save(value); setNotice(`${values.length} item(s) imported`); }
+
+  async function save(data: RecordData) {
+    const slug = String(data.slug || "").trim();
+    if (!slug) throw new Error("Every item needs a slug.");
+    const authToken = await token();
+    await api.save(authToken, section as Collection, slug, data);
+    setSelected(null);
+    setToast({ message: "Saved and published", tone: "success" });
+    await refresh();
+  }
+
+  function requestDelete(item: RecordData) {
+    setConfirm({
+      title: `Delete ${titleFor(item)}?`,
+      body: "This removes it from the live site immediately. This can't be undone.",
+      onConfirm: async () => {
+        try {
+          await api.remove(await token(), section as Collection, String(item.slug));
+          setToast({ message: "Item deleted", tone: "success" });
+          await refresh();
+        } catch (error) {
+          notifyError(error);
+        }
+      },
+    });
+  }
+
+  async function updateInquiry(id: string, status: string) {
+    try {
+      await api.updateInquiry(await token(), id, status);
+      setToast({ message: "Inquiry updated", tone: "success" });
+      await refresh();
+    } catch (error) {
+      notifyError(error);
+    }
+  }
+
+  function exportItems() {
+    const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${section}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  async function importItems(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || section === "overview" || section === "inquiries") return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      const values = Array.isArray(parsed) ? parsed : [parsed];
+      for (const value of values) await save(value);
+      setToast({ message: `${values.length} item(s) imported`, tone: "success" });
+    } catch (error) {
+      notifyError(error);
+    }
+  }
+
   const filtered = items.filter((item) => JSON.stringify(item).toLowerCase().includes(query.toLowerCase()));
-  const label = section === "blogPosts" ? "Blog posts" : section === "work" ? "Selected work" : section.charAt(0).toUpperCase() + section.slice(1);
-  return <div className="app-shell"><aside className={`sidebar ${mobileNav ? "open" : ""}`}><div className="sidebar-top"><div className="brand-mark">B<span>/</span></div><button className="icon-button mobile-close" onClick={() => setMobileNav(false)}><X size={19} /></button></div><p className="sidebar-label">Workspace</p><nav><button className={section === "overview" ? "active" : ""} onClick={() => { setSection("overview"); setMobileNav(false); }}><LayoutDashboard size={17} /> Overview</button><p className="sidebar-label">Content</p>{collectionNames.map((name) => <button key={name} className={section === name ? "active" : ""} onClick={() => { setSection(name); setMobileNav(false); }}><FileJson size={17} /> {name === "blogPosts" ? "Blog posts" : name === "work" ? "Selected work" : name[0].toUpperCase() + name.slice(1)}<span className="nav-count">{counts[name] ?? 0}</span></button>)}<button className={section === "inquiries" ? "active" : ""} onClick={() => { setSection("inquiries"); setMobileNav(false); }}><Inbox size={17} /> Inquiries<span className="nav-count">{counts.inquiries ?? 0}</span></button></nav><div className="sidebar-user"><div className="avatar">{(user.email || "A")[0].toUpperCase()}</div><div><strong>{user.email?.split("@")[0]}</strong><small>Administrator</small></div><button className="icon-button" title="Sign out" onClick={() => signOut(auth)}><LogOut size={16} /></button></div></aside><div className="main-area"><header className="topbar"><button className="icon-button menu-button" onClick={() => setMobileNav(true)}><Menu size={21} /></button><div><p className="eyebrow">Brivent / {section === "overview" ? "Workspace" : label}</p><h2>{section === "overview" ? "Good morning." : label}</h2></div><a className="view-site" href={siteUrl} target="_blank" rel="noreferrer">View site <ArrowUpRight size={16} /></a></header><main className="content">{notice && <div className="notice"><Check size={16} /> {notice}<button onClick={() => setNotice("")}><X size={15} /></button></div>}{section === "overview" ? <Overview counts={counts} onNavigate={(next) => setSection(next)} /> : section === "inquiries" ? <InquiryList inquiries={inquiries} onUpdate={updateInquiry} /> : <CollectionView label={label} items={filtered} query={query} setQuery={setQuery} selected={selected} setSelected={setSelected} onSave={save} onDelete={remove} onRefresh={() => refresh().catch((error) => setNotice(error.message))} onExport={exportItems} onImport={importItems} />}</main></div></div>;
+
+  return (
+    <div className="app-shell">
+      <Sidebar
+        user={user}
+        section={section}
+        counts={counts}
+        mobileNav={mobileNav}
+        onNavigate={(next) => {
+          setSection(next);
+          setMobileNav(false);
+        }}
+        onCloseMobile={() => setMobileNav(false)}
+      />
+      <div className="main-area">
+        <Topbar section={section} onOpenMobile={() => setMobileNav(true)} />
+        <main className="content">
+          <Toast toast={toast} onDismiss={() => setToast(null)} />
+          {section === "overview" ? (
+            <Overview counts={counts} onNavigate={setSection} />
+          ) : section === "inquiries" ? (
+            <InquiryList inquiries={inquiries} onUpdate={updateInquiry} />
+          ) : (
+            <CollectionView
+              collection={section}
+              items={filtered}
+              loading={loadingSection}
+              query={query}
+              setQuery={setQuery}
+              selected={selected}
+              setSelected={setSelected}
+              onSave={save}
+              onDelete={requestDelete}
+              onRefresh={refresh}
+              onExport={exportItems}
+              onImport={importItems}
+            />
+          )}
+        </main>
+      </div>
+      <ConfirmDialog state={confirm} onCancel={() => setConfirm(null)} />
+    </div>
+  );
 }
-
-function Overview({ counts, onNavigate }: { counts: Record<string, number>; onNavigate: (section: Collection) => void }) { const total = collectionNames.reduce((sum, key) => sum + (counts[key] || 0), 0); return <><section className="welcome"><div><p className="eyebrow">Tuesday, 26 August 2026</p><h1>The work is in your hands.</h1><p className="muted">A clear view of the content and conversations shaping Brivent.</p></div><Activity size={45} strokeWidth={1.2} /></section><div className="metric-grid"><Metric label="Published content" value={total} /><Metric label="Open enquiries" value={counts.inquiries || 0} /><Metric label="Collections" value={5} /></div><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Content map</p><h3>Collections</h3></div><span className="muted">Select a collection to edit</span></div><div className="collection-grid">{collectionNames.map((key, index) => <button className="collection-card" key={key} onClick={() => onNavigate(key)}><span className="card-index">0{index + 1}</span><strong>{key === "blogPosts" ? "Blog posts" : key === "work" ? "Selected work" : key[0].toUpperCase() + key.slice(1)}</strong><span>{counts[key] || 0} records <ChevronRight size={15} /></span></button>)}</div></section></>; }
-function Metric({ label, value }: { label: string; value: number }) { return <div className="metric"><span>{label}</span><strong>{value}</strong><small>Live now</small></div>; }
-
-function CollectionView({ label, items, query, setQuery, selected, setSelected, onSave, onDelete, onRefresh, onExport, onImport }: { label: string; items: RecordData[]; query: string; setQuery: (value: string) => void; selected: RecordData | null; setSelected: (value: RecordData | null) => void; onSave: (value: RecordData) => Promise<void>; onDelete: (value: RecordData) => Promise<void>; onRefresh: () => void; onExport: () => void; onImport: (event: React.ChangeEvent<HTMLInputElement>) => void }) { return <section className="section-block"><div className="toolbar"><div className="search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${label.toLowerCase()}...`} /></div><div className="toolbar-actions"><button className="secondary-button" onClick={onRefresh}><RefreshCw size={16} /> Refresh</button><button className="secondary-button" onClick={onExport}><Upload size={16} /> Export</button><label className="secondary-button"><FileJson size={16} /> Import<input type="file" accept="application/json" onChange={onImport} hidden /></label><button className="primary-button compact" onClick={() => setSelected({})}><Plus size={16} /> New</button></div></div>{selected ? <Editor value={selected} onCancel={() => setSelected(null)} onSave={onSave} /> : <div className="records">{items.length === 0 ? <div className="empty"><FileJson size={28} /><h3>No records yet</h3><p>Create the first item or import a JSON file.</p></div> : items.map((item) => <article className="record" key={String(item.slug)}><div className="record-number">{String(item.order || "—")}</div><div className="record-body"><strong>{String(item.name || item.title || item.slug || "Untitled")}</strong><span>{String(item.slug || "No slug")} {item.status ? `· ${String(item.status)}` : ""}</span></div><button className="icon-button" title="Edit" onClick={() => setSelected(item)}><ChevronRight size={18} /></button><button className="icon-button danger-icon" title="Delete" onClick={() => onDelete(item)}><Trash2 size={16} /></button></article>)}</div>}</section>; }
-
-function Editor({ value, onCancel, onSave }: { value: RecordData; onCancel: () => void; onSave: (value: RecordData) => Promise<void> }) { const [text, setText] = useState(JSON.stringify(value, null, 2)); const [error, setError] = useState(""); const [saving, setSaving] = useState(false); async function submit() { try { const parsed = JSON.parse(text); setSaving(true); setError(""); await onSave(parsed); } catch (caught) { setError(caught instanceof Error ? caught.message : "Invalid JSON"); } finally { setSaving(false); } } return <div className="editor"><div className="editor-head"><div><p className="eyebrow">Document editor</p><h3>{value.slug ? `Edit ${String(value.slug)}` : "New document"}</h3></div><button className="icon-button" onClick={onCancel}><X size={18} /></button></div><textarea className="json-editor" value={text} onChange={(event) => setText(event.target.value)} spellCheck={false} />{error && <p className="error">{error}</p>}<div className="editor-actions"><button className="secondary-button" onClick={onCancel}>Cancel</button><button className="primary-button" onClick={submit} disabled={saving}><Save size={16} /> {saving ? "Saving..." : "Save & publish"}</button></div></div>; }
-
-function InquiryList({ inquiries, onUpdate }: { inquiries: Inquiry[]; onUpdate: (id: string, status: string) => Promise<void> }) { return <section className="section-block"><div className="section-heading"><div><p className="eyebrow">Inbox</p><h3>Contact enquiries</h3></div><span className="muted">{inquiries.length} total</span></div><div className="inquiry-list">{inquiries.length === 0 ? <div className="empty"><Inbox size={28} /><h3>No enquiries yet</h3><p>New messages from the public site will appear here.</p></div> : inquiries.map((inquiry) => <article className="inquiry" key={inquiry.id}><div className="inquiry-top"><div><strong>{inquiry.name || "Unnamed contact"}</strong><span>{inquiry.email} · {inquiry.enquiryType || "General"}</span></div><select value={inquiry.status || "new"} onChange={(event) => onUpdate(inquiry.id, event.target.value)}><option value="new">New</option><option value="in_progress">In progress</option><option value="resolved">Resolved</option></select></div><p>{inquiry.message || "No message"}</p></article>)}</div></section>; }
 
 export default App;

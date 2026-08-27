@@ -1,13 +1,39 @@
 const { Router } = require("express");
+const multer = require("multer");
 const { requireAdmin } = require("../middleware/adminAuth");
 const { listCollection, upsertCollectionItem, deleteCollectionItem } = require("../repositories/briventContentRepo");
 const { listInquiries, updateInquiry } = require("../repositories/adminRepo");
+const { uploadImage } = require("../repositories/uploadRepo");
 
 const collections = ["careers", "blogPosts", "products", "work", "team"];
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    if (!/^image\//.test(file.mimetype)) {
+      const error = new Error("Only image uploads are allowed.");
+      error.status = 400;
+      return callback(error);
+    }
+    return callback(null, true);
+  },
+});
 
 function createAdminRoutes() {
   const router = Router();
   router.use(requireAdmin);
+
+  router.post("/upload", upload.single("file"), async (req, res, next) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: "No file was uploaded." });
+      const folder = collections.includes(req.body?.collection) ? req.body.collection : "general";
+      const url = await uploadImage(req.file, folder);
+      return res.json({ url });
+    } catch (error) {
+      return next(error);
+    }
+  });
 
   router.get("/summary", async (_req, res, next) => {
     try {
