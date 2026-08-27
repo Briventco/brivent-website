@@ -1,0 +1,15 @@
+# humans.txt
+# Brivent Global Innovations Ltd — Brivent Product Lab
+
+/* TEAM */
+  Company: Brivent Global Innovations Ltd
+  Website: https://www.brivent.co
+  Email: hello@brivent.co
+  Location: Lagos, Nigeria
+
+/* TECHNOLOGY */
+  Astro, Tailwind CSS, TypeScript, Formspree
+  Fonts: Clash Display, Bricolage Grotesque
+
+/* LAST UPDATED */
+  2026-07-25

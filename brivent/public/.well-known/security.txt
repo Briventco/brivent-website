@@ -1,0 +1,7 @@
+# security.txt
+# Brivent Security Contact
+
+Contact: mailto:hello@brivent.co
+Preferred-Languages: en
+Canonical: https://www.brivent.co/.well-known/security.txt
+Expires: 2027-01-01T00:00:00.000Z
