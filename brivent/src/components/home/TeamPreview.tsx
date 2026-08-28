@@ -7,8 +7,45 @@ import Button from "@/components/shared/Button";
 import TeamCard from "@/components/shared/TeamCard";
 import { TeamMember } from "@/types/team";
 
-export default function TeamPreview({ teamMembers }: { teamMembers: TeamMember[] }) {
-  const preview = teamMembers.slice(0, 4);
+export default function TeamPreview({
+  teamMembers,
+}: {
+  teamMembers: TeamMember[];
+}) {
+  /**
+   * Keep the homepage team preview in a deliberate order.
+   * This prevents the order from changing depending on
+   * database/API response order.
+   */
+  const preferredOrder = [
+    "Oyindamola Abisoye",
+    "John Samuel",
+    "Badmus Qudus Ayomide",
+    "Israel Yaya",
+  ];
+
+  const normalized = (value: string) =>
+    value.trim().toLowerCase().replace(/\s+/g, " ");
+
+  const orderedMembers = preferredOrder
+    .map((preferredName) =>
+      teamMembers.find(
+        (member) =>
+          normalized(member.name) === normalized(preferredName)
+      )
+    )
+    .filter((member): member is TeamMember => Boolean(member));
+
+  // Keep any other team members available as fallback,
+  // but don't let them disturb the preferred homepage order.
+  const remainingMembers = teamMembers.filter(
+    (member) =>
+      !orderedMembers.some(
+        (orderedMember) => orderedMember.slug === member.slug
+      )
+  );
+
+  const preview = [...orderedMembers, ...remainingMembers].slice(0, 4);
 
   return (
     <section className="relative bg-surface py-24 border-b border-border overflow-hidden">
@@ -24,6 +61,7 @@ export default function TeamPreview({ teamMembers }: { teamMembers: TeamMember[]
         >
           The People Behind Brivent
         </motion.p>
+
         <SectionHeading
           align="center"
           title="Meet the people building Brivent."
@@ -39,7 +77,11 @@ export default function TeamPreview({ teamMembers }: { teamMembers: TeamMember[]
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.08, ease: "easeOut" }}
+                transition={{
+                  duration: 0.5,
+                  delay: i * 0.08,
+                  ease: "easeOut",
+                }}
               >
                 <TeamCard member={member} />
               </motion.div>
