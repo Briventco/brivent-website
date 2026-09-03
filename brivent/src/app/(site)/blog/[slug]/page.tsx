@@ -52,7 +52,7 @@ export default async function BlogArticlePage({ params }: Props) {
 
   return (
     <main>
-      <section className="bg-[#0F172A] pt-40 pb-20">
+      <section className="bg-dark-bg pt-40 pb-10">
         <Container>
           <Link
             href="/blog"
@@ -60,13 +60,26 @@ export default async function BlogArticlePage({ params }: Props) {
           >
             ← All insights
           </Link>
+          
+          {/* Title section - like screenshot */}
           <p className="text-accent text-[10px] tracking-widest uppercase font-semibold mt-6 mb-3">
             {post.category}
           </p>
-          <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-tight max-w-3xl mb-6">
+          <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-tight max-w-3xl mb-4">
             {post.title}
           </h1>
-          <div className="flex items-center gap-3 text-sm text-white/50">
+          
+          {/* Image goes here - between title and metadata */}
+          <div className="relative w-full aspect-[16/9] md:aspect-[21/10] overflow-hidden rounded-lg my-6">
+            <img
+              src="/images/blog/image.png"
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+          
+          {/* Author and metadata below the image */}
+          <div className="flex items-center gap-3 text-sm text-white/50 mt-4">
             <span>{post.author}</span>
             <span>•</span>
             <span>{formatDate(post.publishedAt)}</span>
@@ -80,6 +93,7 @@ export default async function BlogArticlePage({ params }: Props) {
         </Container>
       </section>
 
+      {/* Article content */}
       <section className="bg-white py-20 border-b border-border">
         <Container>
           <article

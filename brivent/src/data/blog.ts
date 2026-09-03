@@ -8,3 +8,5 @@ export const blogCategories: { label: BlogCategory; description: string }[] = [
   { label: "Partnerships", description: "Collaboration announcements and stories." },
   { label: "Community", description: "Events, people, and ecosystem activity." },
 ];
+
+export const blogPosts: BlogPost[] = [];
