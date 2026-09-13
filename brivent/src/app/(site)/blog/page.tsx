@@ -1,7 +1,12 @@
 import { Metadata } from "next";
 import { buildMetadata } from "@/lib/metadata";
 import { getBlogPosts } from "@/lib/api";
-import { BlogHero, Categories, LatestPosts } from "@/components/blog/Sections";
+import {
+  BlogHero,
+  Categories,
+  CategoryRows,
+  LatestPosts,
+} from "@/components/blog/Sections";
 
 export const metadata: Metadata = buildMetadata({
   title: "Insights",
@@ -17,6 +22,7 @@ export default async function BlogPage() {
     <main>
       <BlogHero />
       <Categories />
+      <CategoryRows posts={posts} />
       <LatestPosts posts={posts} />
     </main>
   );

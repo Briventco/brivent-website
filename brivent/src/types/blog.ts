@@ -22,4 +22,5 @@ export interface BlogPost {
   seoTitle?: string;
   seoDescription?: string;
   ogImage?: string;
+  pinned?: boolean;
 }

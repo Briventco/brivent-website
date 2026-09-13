@@ -75,12 +75,24 @@ export default function BlogCard({ post }: BlogCardProps) {
         </div>
         
         <div className="p-6 flex flex-col flex-1" style={{ transform: "translateZ(20px)" }}>
+          {post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {post.tags.slice(0, 2).map((tag) => (
+                <span
+                  key={tag}
+                  className="bg-accent/10 text-accent text-xs font-medium px-3 py-1 rounded-full"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-            <span className="font-medium text-gray-700">{post.author}</span>
             <span>•</span>
             <span>{formatDate(post.publishedAt)}</span>
           </div>
-          
+
           <h3 className="text-xl font-bold text-gray-900 leading-snug mb-3 group-hover:text-accent transition-colors line-clamp-2">
             {post.title}
           </h3>
@@ -88,15 +100,6 @@ export default function BlogCard({ post }: BlogCardProps) {
           <p className="text-sm text-gray-600 line-clamp-2 mb-4 flex-1">
             {post.excerpt}
           </p>
-          
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-            <span className="text-accent text-[10px] tracking-wider uppercase font-semibold">
-              {post.category}
-            </span>
-            {post.readingTime && (
-              <span className="text-xs text-gray-500">{post.readingTime}</span>
-            )}
-          </div>
         </div>
       </motion.article>
     </Link>

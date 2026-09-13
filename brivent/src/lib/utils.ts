@@ -25,3 +25,18 @@ export function getRelatedPosts(
     .filter((p) => p.slug !== currentSlug && p.category === current.category)
     .slice(0, limit);
 }
+
+export function slugifyCategory(category: string): string {
+  return category.toLowerCase().replace(/\s+/g, "-");
+}
+
+export function categoryFromSlug<T extends string>(
+  slug: string,
+  categoryLabels: T[]
+): T | undefined {
+  return categoryLabels.find((label) => slugifyCategory(label) === slug);
+}
+
+export function sortPinnedFirst<T extends { pinned?: boolean }>(items: T[]): T[] {
+  return [...items].sort((a, b) => Number(!!b.pinned) - Number(!!a.pinned));
+}
