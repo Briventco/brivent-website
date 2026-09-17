@@ -72,9 +72,11 @@ export const schemas: Record<Collection, FieldSchema[]> = {
     { key: "title", label: "Title", type: "text", required: true },
     { key: "excerpt", label: "Excerpt", type: "textarea" },
     { key: "content", label: "Content", type: "textarea" },
+    { key: "category", label: "Category", type: "select", options: ["Company", "Product", "Engineering", "AI", "Business", "Partnerships", "Community", "Careers"], required: true },
     { key: "coverImage", label: "Cover image", type: "image" },
     { key: "author", label: "Author", type: "text" },
     { key: "tags", label: "Tags", type: "tags" },
+    { key: "pinned", label: "Pinned", type: "boolean", hint: "Show this post first in its category." },
     { key: "order", label: "Sort order", type: "number" },
   ],
 };

@@ -19,7 +19,7 @@ export function ContactHero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <SectionLabel light>Work with Brivent</SectionLabel>
+          <SectionLabel light>Contact</SectionLabel>
           <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-tight max-w-3xl mb-6">
             Let&rsquo;s build{" "}
             <span className="text-accent">something useful.</span>

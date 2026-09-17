@@ -48,6 +48,7 @@ const blogPostSchema = z.object({
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   ogImage: z.string().optional(),
+  pinned: z.boolean().default(false),
 });
 
 function toBlogPost(raw: z.infer<typeof blogPostSchema>): BlogPost {

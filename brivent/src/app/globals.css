@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 :root {
   --background: #ffffff;
   --foreground: #0f172a;
@@ -31,6 +32,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+.perspective-1000 {
+  perspective: 1000px;
 }
 
 ::-webkit-scrollbar {
