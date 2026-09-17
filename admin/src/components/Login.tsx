@@ -3,7 +3,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { ArrowUpRight } from "lucide-react";
 import { auth } from "../lib/firebase";
 
-export function Login() {
+export function Login({ error: authError = "" }: { error?: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -40,7 +40,7 @@ export function Login() {
             Password
             <input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" required />
           </label>
-          {error && <p className="error">{error}</p>}
+          {(error || authError) && <p className="error">{error || authError}</p>}
           <button className="primary-button" disabled={loading}>
             {loading ? "Signing in..." : "Sign in"}
             <ArrowUpRight size={17} />

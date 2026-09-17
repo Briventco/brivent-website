@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { RefreshCw } from "lucide-react";
 import { auth } from "./lib/firebase";
 import { api } from "./lib/api";
@@ -17,16 +17,51 @@ import { ConfirmDialog, ConfirmState } from "./components/ConfirmDialog";
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  useEffect(() => onAuthStateChanged(auth, (next) => { setUser(next); setLoading(false); }), []);
+  const [authError, setAuthError] = useState("");
+  const [verifiedCounts, setVerifiedCounts] = useState<Record<string, number> | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    const unsubscribe = onAuthStateChanged(auth, async (next) => {
+      if (!next) {
+        if (active) {
+          setUser(null);
+          setVerifiedCounts(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      setLoading(true);
+      setAuthError("");
+      try {
+        // Firebase can restore a cached session while the API is down. Verify
+        // the session against our admin API before showing the dashboard.
+        const summary = await api.summary(await next.getIdToken());
+        if (!active) return;
+        setVerifiedCounts({ ...summary.counts, inquiries: summary.inquiries });
+        setUser(next);
+      } catch (error) {
+        if (!active) return;
+        await signOut(auth).catch(() => undefined);
+        setUser(null);
+        setVerifiedCounts(null);
+        setAuthError(error instanceof Error ? error.message : "The admin backend is unavailable. Please try again.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    });
+    return () => { active = false; unsubscribe(); };
+  }, []);
   if (loading) return <div className="loading-screen"><RefreshCw className="spin" /> Loading workspace</div>;
-  return user ? <Dashboard user={user} /> : <Login />;
+  return user ? <Dashboard user={user} initialCounts={verifiedCounts || {}} /> : <Login error={authError} />;
 }
 
-function Dashboard({ user }: { user: User }) {
+function Dashboard({ user, initialCounts }: { user: User; initialCounts: Record<string, number> }) {
   const [section, setSection] = useState<Section>("overview");
   const [items, setItems] = useState<RecordData[]>([]);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [counts, setCounts] = useState<Record<string, number>>(initialCounts);
   const [selected, setSelected] = useState<RecordData | null>(null);
   const [query, setQuery] = useState("");
   const [toast, setToast] = useState<ToastState>(null);
@@ -47,7 +82,7 @@ function Dashboard({ user }: { user: User }) {
     try {
       const authToken = await token();
       const summary = await api.summary(authToken);
-      setCounts(summary.counts);
+      setCounts({ ...summary.counts, inquiries: summary.inquiries });
       if (section === "inquiries") setInquiries(await api.inquiries(authToken));
       else if (section !== "overview") setItems(await api.list(authToken, section as Collection));
     } catch (error) {

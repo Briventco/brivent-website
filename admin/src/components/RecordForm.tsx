@@ -3,13 +3,38 @@ import { ImageOff, Save, UploadCloud, X, ZoomIn } from "lucide-react";
 import { Collection, FieldSchema, RecordData } from "../types";
 import { schemas, titleField } from "../schema";
 import { slugify } from "../lib/slug";
-import { api, siteUrl } from "../lib/api";
-import { auth } from "../lib/firebase";
+import { siteUrl } from "../lib/api";
 
 function resolveImageUrl(value: string): string {
   if (!value) return "";
   if (/^(https?:)?\/\//.test(value) || value.startsWith("data:")) return value;
   return `${siteUrl}${value.startsWith("/") ? "" : "/"}${value}`;
+}
+
+async function imageFileToDataUrl(file: File): Promise<string> {
+  const sourceUrl = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = sourceUrl;
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error("The selected image could not be read."));
+    });
+
+    const maxDimension = 1600;
+    const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    let dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+    if (dataUrl.length > 700_000) dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+    if (dataUrl.length > 950_000) throw new Error("This image is too large. Please choose a smaller image.");
+    return dataUrl;
+  } finally {
+    URL.revokeObjectURL(sourceUrl);
+  }
 }
 
 function TagsInput({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
@@ -61,9 +86,7 @@ function ImageField({ collection, value, onChange }: { collection: Collection; v
     setUploading(true);
     setError("");
     try {
-      const token = await auth.currentUser?.getIdToken();
-      if (!token) throw new Error("You need to be signed in to upload.");
-      const url = await api.upload(token, file, collection);
+      const url = await imageFileToDataUrl(file);
       setBroken(false);
       onChange(url);
     } catch (caught) {
