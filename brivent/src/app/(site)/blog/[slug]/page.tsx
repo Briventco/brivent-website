@@ -14,6 +14,8 @@ import {
 } from "@/lib/utils";
 import Container from "@/components/shared/Container";
 import BlogCard from "@/components/shared/BlogCard";
+import JsonLd from "@/components/shared/JsonLd";
+import { articleJsonLd, breadcrumbJsonLd } from "@/lib/jsonld";
 import { BlogPost, BlogCategory } from "@/types/blog";
 
 interface Props {
@@ -39,7 +41,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: post.seoTitle ?? post.title,
       description: post.seoDescription ?? post.excerpt,
       path: `/blog/${post.slug}`,
-      ogImage: post.ogImage,
+      ogImage: post.ogImage ?? post.coverImage,
+      type: "article",
+      publishedAt: post.publishedAt,
     });
   }
 
@@ -75,6 +79,14 @@ function CategoryPage({
 
   return (
     <main>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "" },
+          { name: "Insights", path: "/blog" },
+          { name: `For ${category}`, path: `/blog/${slugifyCategory(category)}` },
+        ])}
+      />
+
       <section className="relative pt-40 pb-20 overflow-hidden bg-dark-bg">
         {categoryMeta?.heroImage && (
           <img
@@ -125,9 +137,28 @@ function CategoryPage({
 function ArticlePage({ post, posts }: { post: BlogPost; posts: BlogPost[] }) {
   const related = getRelatedPosts(posts, post.slug);
   const contentHtml = marked.parse(post.content, { async: false });
+  const dateLabel = formatDate(post.publishedAt);
 
   return (
     <main>
+      <JsonLd
+        data={articleJsonLd({
+          title: post.title,
+          description: post.seoDescription ?? post.excerpt,
+          slug: post.slug,
+          publishedAt: post.publishedAt,
+          image: post.ogImage ?? post.coverImage,
+          author: post.author,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "" },
+          { name: "Insights", path: "/blog" },
+          { name: post.title, path: `/blog/${post.slug}` },
+        ])}
+      />
+
       <section className="bg-dark-bg pt-40 pb-10">
         <Container>
           <Link
@@ -149,16 +180,17 @@ function ArticlePage({ post, posts }: { post: BlogPost; posts: BlogPost[] }) {
               src={post.coverImage || "/images/blog/image.png"}
               alt={post.title}
               className="w-full h-full object-cover"
+              fetchPriority="high"
             />
           </div>
 
           <div className="flex items-center gap-3 text-sm text-white/50 mt-4">
-            <span>{post.author}</span>
-            <span>•</span>
-            <span>{formatDate(post.publishedAt)}</span>
+            {post.author && <span>{post.author}</span>}
+            {post.author && dateLabel && <span>•</span>}
+            {dateLabel && <time dateTime={post.publishedAt}>{dateLabel}</time>}
             {post.readingTime && (
               <>
-                <span>•</span>
+                {(post.author || dateLabel) && <span>•</span>}
                 <span>{post.readingTime}</span>
               </>
             )}

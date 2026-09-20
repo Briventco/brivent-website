@@ -9,12 +9,14 @@ interface BlogCardProps {
   post: BlogPost;
 }
 
-function formatDate(date: string | Date) {
+function formatDate(date?: string | Date) {
+  if (!date) return "";
   const d = new Date(date);
-  return d.toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -22,23 +24,23 @@ export default function BlogCard({ post }: BlogCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  
+
   const rotateX = useTransform(y, [-100, 100], [10, -10]);
   const rotateY = useTransform(x, [-100, 100], [-10, 10]);
-  
+
   const springX = useSpring(rotateX, { stiffness: 300, damping: 30 });
   const springY = useSpring(rotateY, { stiffness: 300, damping: 30 });
 
   function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
     const rect = ref.current?.getBoundingClientRect();
     if (!rect) return;
-    
+
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    
+
     const mouseX = e.clientX - centerX;
     const mouseY = e.clientY - centerY;
-    
+
     x.set(mouseX);
     y.set(mouseY);
   }
@@ -73,7 +75,7 @@ export default function BlogCard({ post }: BlogCardProps) {
             </span>
           </div>
         </div>
-        
+
         <div className="p-6 flex flex-col flex-1" style={{ transform: "translateZ(20px)" }}>
           {post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
@@ -96,7 +98,7 @@ export default function BlogCard({ post }: BlogCardProps) {
           <h3 className="text-xl font-bold text-gray-900 leading-snug mb-3 group-hover:text-accent transition-colors line-clamp-2">
             {post.title}
           </h3>
-          
+
           <p className="text-sm text-gray-600 line-clamp-2 mb-4 flex-1">
             {post.excerpt}
           </p>

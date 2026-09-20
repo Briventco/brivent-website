@@ -16,7 +16,6 @@ export const collectionSingular: Record<Collection, string> = {
   careers: "role",
 };
 
-// The field each collection's slug is derived from when a new item is created.
 export const titleField: Record<Collection, "name" | "title"> = {
   products: "name",
   work: "title",
@@ -64,8 +63,13 @@ export const schemas: Record<Collection, FieldSchema[]> = {
     { key: "department", label: "Department", type: "text" },
     { key: "location", label: "Location", type: "text" },
     { key: "employmentType", label: "Employment type", type: "select", options: ["Full-time", "Part-time", "Contract", "Internship"] },
-    { key: "description", label: "Description", type: "textarea" },
-    { key: "applyUrl", label: "Apply URL", type: "url" },
+    { key: "description", label: "Description", type: "textarea", hint: "One expectation or requirement per line." },
+    {
+      key: "applyUrl",
+      label: "Apply link or email",
+      type: "text",
+      hint: "An email like operations@yourdomain.com opens the applicant's mail app. A web link opens that page.",
+    },
     { key: "order", label: "Sort order", type: "number" },
   ],
   blogPosts: [
@@ -75,6 +79,7 @@ export const schemas: Record<Collection, FieldSchema[]> = {
     { key: "category", label: "Category", type: "select", options: ["Company", "Product", "Engineering", "AI", "Business", "Partnerships", "Community", "Careers"], required: true },
     { key: "coverImage", label: "Cover image", type: "image" },
     { key: "author", label: "Author", type: "text" },
+    { key: "publishedAt", label: "Publish date", type: "text", hint: "Format: 2026-09-20. Leave empty to use today's date." },
     { key: "tags", label: "Tags", type: "tags" },
     { key: "pinned", label: "Pinned", type: "boolean", hint: "Show this post first in its category." },
     { key: "order", label: "Sort order", type: "number" },

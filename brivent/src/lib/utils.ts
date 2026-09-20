@@ -4,8 +4,10 @@ export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(" ");
 }
 
-export function formatDate(dateString: string): string {
+export function formatDate(dateString?: string): string {
+  if (!dateString) return "";
   const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",

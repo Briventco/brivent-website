@@ -6,6 +6,8 @@ interface PageMetadataInput {
   description: string;
   path?: string;
   ogImage?: string;
+  type?: "website" | "article";
+  publishedAt?: string;
 }
 
 export function buildMetadata({
@@ -13,11 +15,22 @@ export function buildMetadata({
   description,
   path = "",
   ogImage,
+  type = "website",
+  publishedAt,
 }: PageMetadataInput): Metadata {
   const url = `${siteConfig.url}${path}`;
+  const image = ogImage
+    ? ogImage.startsWith("http")
+      ? ogImage
+      : `${siteConfig.url}${ogImage}`
+    : undefined;
+
+  const published = publishedAt ? new Date(publishedAt) : null;
+  const validPublished =
+    published && !Number.isNaN(published.getTime()) ? published.toISOString() : undefined;
 
   return {
-    title: `${title} | ${siteConfig.shortName}`,
+    title,
     description,
     alternates: {
       canonical: url,
@@ -27,14 +40,16 @@ export function buildMetadata({
       description,
       url,
       siteName: siteConfig.name,
-      images: ogImage ? [{ url: ogImage }] : undefined,
-      type: "website",
+      locale: "en_NG",
+      type,
+      ...(type === "article" && validPublished ? { publishedTime: validPublished } : {}),
+      ...(image ? { images: [{ url: image }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ogImage ? [ogImage] : undefined,
+      ...(image ? { images: [image] } : {}),
     },
   };
 }

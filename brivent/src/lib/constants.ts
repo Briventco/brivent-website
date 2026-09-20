@@ -1,7 +1,8 @@
 export const siteConfig = {
   name: "Brivent Global Innovations Ltd.",
   shortName: "Brivent",
-  url: "https://brivent.co",
+  // url: "https://brivent.co",
+  url: "https://www.brivent.co",
   description:
     "Brivent Global Innovations is a technology company building digital products, AI-powered systems, and practical software solutions for businesses, teams, and emerging ventures.",
   email: "hello@brivent.co",

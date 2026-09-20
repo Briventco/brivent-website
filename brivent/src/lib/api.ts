@@ -55,19 +55,61 @@ function toBlogPost(raw: z.infer<typeof blogPostSchema>): BlogPost {
   return { ...raw, category: raw.category as BlogCategory };
 }
 
+// Accepts both the admin's field names (employmentType, description, applyUrl)
+// and the older website field names (engagementType, expectations, applyHref).
 const jobOpeningSchema = z.object({
   slug: z.string(),
   title: z.string(),
   department: z.string().default(""),
   location: z.string().default(""),
   remote: z.boolean().default(false),
-  engagementType: z.string().default("Full-time"),
+  engagementType: z.string().optional(),
+  employmentType: z.string().optional(),
   expectations: z.array(z.string()).default([]),
-  applyHref: z.string().default("/contact"),
+  description: z.string().optional(),
+  applyHref: z.string().optional(),
+  applyUrl: z.string().optional(),
 });
 
+// Turns whatever was typed in the admin into a working link:
+//  - empty                      -> /contact
+//  - operations@yourdomain.com  -> mailto:operations@yourdomain.com
+//  - mailto:..., http(s)://..., or /path -> used as-is
+function resolveApplyHref(value: string | undefined): string {
+  const link = (value ?? "").trim();
+  if (!link) return "/contact";
+
+  if (/^(mailto:|https?:\/\/|\/)/i.test(link)) return link;
+
+  if (link.includes("@") && !/\s/.test(link)) return `mailto:${link}`;
+
+  // Bare domain like "forms.example.com/apply"
+  return `https://${link}`;
+}
+
 function toJobOpening(raw: z.infer<typeof jobOpeningSchema>): JobOpening {
-  return { ...raw, engagementType: raw.engagementType as EngagementType };
+  // If the admin saved a description but no expectations list,
+  // split the description into one expectation per line.
+  const expectations =
+    raw.expectations.length > 0
+      ? raw.expectations
+      : (raw.description ?? "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+  return {
+    slug: raw.slug,
+    title: raw.title,
+    department: raw.department,
+    location: raw.location,
+    remote: raw.remote,
+    engagementType: (raw.engagementType ||
+      raw.employmentType ||
+      "Full-time") as EngagementType,
+    expectations,
+    applyHref: resolveApplyHref(raw.applyUrl || raw.applyHref),
+  };
 }
 
 function parseList<T>(

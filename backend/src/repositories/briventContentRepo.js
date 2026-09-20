@@ -102,7 +102,19 @@ async function upsertCollectionItem(key, slug, data) {
   const config = collectionMap[key];
   const normalizedSlug = String(slug || "").trim();
   if (!normalizedSlug) throw new Error("A slug is required.");
-  await db.collection(config.name).doc(normalizedSlug).set({ ...data, slug: normalizedSlug }, { merge: true });
+
+  const payload = { ...data, slug: normalizedSlug };
+
+  if (key === "blogPosts") {
+    const docRef = db.collection(config.name).doc(normalizedSlug);
+    const existing = await docRef.get();
+    const existingDate = existing.exists ? existing.data().publishedAt : "";
+    if (!payload.publishedAt) {
+      payload.publishedAt = existingDate || new Date().toISOString();
+    }
+  }
+
+  await db.collection(config.name).doc(normalizedSlug).set(payload, { merge: true });
   return getCollectionItemBySlug(key, normalizedSlug);
 }
 
