@@ -3,7 +3,7 @@ import { onAuthStateChanged, signOut, User } from "firebase/auth";
 import { RefreshCw } from "lucide-react";
 import { auth } from "./lib/firebase";
 import { api } from "./lib/api";
-import { Collection, Inquiry, RecordData, Section } from "./types";
+import { Collection, Inquiry, Insights, RecordData, Section } from "./types";
 import { titleFor } from "./schema";
 import { Login } from "./components/Login";
 import { Sidebar } from "./components/Sidebar";
@@ -68,6 +68,7 @@ function Dashboard({ user, initialCounts }: { user: User; initialCounts: Record<
   const [confirm, setConfirm] = useState<ConfirmState>(null);
   const [mobileNav, setMobileNav] = useState(false);
   const [loadingSection, setLoadingSection] = useState(false);
+  const [insights, setInsights] = useState<Insights | null>(null);
 
   async function token() {
     return user.getIdToken();
@@ -77,6 +78,23 @@ function Dashboard({ user, initialCounts }: { user: User; initialCounts: Record<
     setToast({ message: error instanceof Error ? error.message : "Something went wrong.", tone: "error" });
   }
 
+  async function loadInsights(authToken: string) {
+    try {
+      const [products, blogPosts, work, team, careers, inquiryList] = await Promise.all([
+        api.list(authToken, "products"),
+        api.list(authToken, "blogPosts"),
+        api.list(authToken, "work"),
+        api.list(authToken, "team"),
+        api.list(authToken, "careers"),
+        api.inquiries(authToken),
+      ]);
+      setInsights({ collections: { products, blogPosts, work, team, careers }, inquiries: inquiryList });
+    } catch {
+      // Charts fall back to empty states; the headline counts still come from the summary.
+      setInsights({ collections: { products: [], blogPosts: [], work: [], team: [], careers: [] }, inquiries: [] });
+    }
+  }
+
   async function refresh() {
     setLoadingSection(true);
     try {
@@ -84,7 +102,8 @@ function Dashboard({ user, initialCounts }: { user: User; initialCounts: Record<
       const summary = await api.summary(authToken);
       setCounts({ ...summary.counts, inquiries: summary.inquiries });
       if (section === "inquiries") setInquiries(await api.inquiries(authToken));
-      else if (section !== "overview") setItems(await api.list(authToken, section as Collection));
+      else if (section === "overview") await loadInsights(authToken);
+      else setItems(await api.list(authToken, section as Collection));
     } catch (error) {
       notifyError(error);
     } finally {
@@ -95,6 +114,7 @@ function Dashboard({ user, initialCounts }: { user: User; initialCounts: Record<
   useEffect(() => {
     setSelected(null);
     setQuery("");
+    setItems([]);
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
@@ -178,13 +198,14 @@ function Dashboard({ user, initialCounts }: { user: User; initialCounts: Record<
         <main className="content">
           <Toast toast={toast} onDismiss={() => setToast(null)} />
           {section === "overview" ? (
-            <Overview counts={counts} onNavigate={setSection} />
+            <Overview counts={counts} insights={insights} onNavigate={setSection} />
           ) : section === "inquiries" ? (
             <InquiryList inquiries={inquiries} onUpdate={updateInquiry} />
           ) : (
             <CollectionView
               collection={section}
               items={filtered}
+              allItems={items}
               loading={loadingSection}
               query={query}
               setQuery={setQuery}

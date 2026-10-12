@@ -9,6 +9,10 @@ async function requireAdmin(req, res, next) {
     const decoded = await admin.auth().verifyIdToken(token);
     const allowedEmails = String(process.env.ADMIN_EMAILS || "")
       .split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
+
+    console.log("signed-in email:", decoded.email);
+    console.log("allowed emails:", allowedEmails);
+
     if (!decoded.email || !allowedEmails.includes(decoded.email.toLowerCase())) {
       return res.status(403).json({ error: "You are not authorized to use the admin dashboard." });
     }

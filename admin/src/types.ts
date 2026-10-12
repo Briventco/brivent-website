@@ -25,3 +25,8 @@ export type FieldSchema = {
   hint?: string;
   readOnlyOnEdit?: boolean;
 };
+
+export type Insights = {
+  collections: Record<Collection, RecordData[]>;
+  inquiries: Inquiry[];
+};

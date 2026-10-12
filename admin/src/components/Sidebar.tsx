@@ -1,8 +1,9 @@
-import { FileJson, Inbox, LayoutDashboard, LogOut, X } from "lucide-react";
+import { LayoutDashboard, LogOut, X } from "lucide-react";
 import { User, signOut } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { collectionNames, Section } from "../types";
 import { collectionLabels } from "../schema";
+import { sectionMeta } from "../sectionMeta";
 
 export function Sidebar({
   user,
@@ -19,12 +20,14 @@ export function Sidebar({
   onNavigate: (section: Section) => void;
   onCloseMobile: () => void;
 }) {
+  const InboxIcon = sectionMeta.inquiries.icon;
   return (
     <aside className={`sidebar ${mobileNav ? "open" : ""}`}>
       <div className="sidebar-top">
-        <div className="brand-mark">
-          B<span>/</span>
-        </div>
+        <a className="brand-lockup" href="/" aria-label="Brivent admin home">
+          <img className="brand-logo" src="/logo-reverse.png" alt="Brivent" />
+          <span className="brand-tag">Command centre</span>
+        </a>
         <button className="icon-button mobile-close" onClick={onCloseMobile}>
           <X size={19} />
         </button>
@@ -35,14 +38,18 @@ export function Sidebar({
           <LayoutDashboard size={17} /> Overview
         </button>
         <p className="sidebar-label">Content</p>
-        {collectionNames.map((name) => (
-          <button key={name} className={section === name ? "active" : ""} onClick={() => onNavigate(name)}>
-            <FileJson size={17} /> {collectionLabels[name]}
-            <span className="nav-count">{counts[name] ?? 0}</span>
-          </button>
-        ))}
+        {collectionNames.map((name) => {
+          const Icon = sectionMeta[name].icon;
+          return (
+            <button key={name} className={section === name ? "active" : ""} onClick={() => onNavigate(name)}>
+              <Icon size={17} /> {collectionLabels[name]}
+              <span className="nav-count">{counts[name] ?? 0}</span>
+            </button>
+          );
+        })}
+        <p className="sidebar-label">Inbox</p>
         <button className={section === "inquiries" ? "active" : ""} onClick={() => onNavigate("inquiries")}>
-          <Inbox size={17} /> Inquiries
+          <InboxIcon size={17} /> Inquiries
           <span className="nav-count">{counts.inquiries ?? 0}</span>
         </button>
       </nav>
